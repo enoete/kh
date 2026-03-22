@@ -1,10 +1,16 @@
 (function(){
 var PC=[["#2d3a2e","#8b6f47"],["#8b6f47","#2d3a2e"],["#3a4a5a","#7a8c6e"],["#5a3e28","#2d3a2e"],["#1a2a1a","#c9a96e"],["#3d3028","#7a8c6e"]];
 
-// ── STATS ──
+// ── STATS — hits API + localStorage fallback ──
 function getStat(id){try{return JSON.parse(localStorage.getItem('bm_stats')||'{}')[id]||{r:0,s:0};}catch(e){return{r:0,s:0};}}
-function addRead(id){try{var a=JSON.parse(localStorage.getItem('bm_stats')||'{}');if(!a[id])a[id]={r:0,s:0};a[id].r++;localStorage.setItem('bm_stats',JSON.stringify(a));}catch(e){}}
-function addShare(id){try{var a=JSON.parse(localStorage.getItem('bm_stats')||'{}');if(!a[id])a[id]={r:0,s:0};a[id].s++;localStorage.setItem('bm_stats',JSON.stringify(a));}catch(e){}}
+function addRead(id){
+  fetch(BM_API+'/'+id+'/read',{method:'POST'}).catch(function(){});
+  try{var a=JSON.parse(localStorage.getItem('bm_stats')||'{}');if(!a[id])a[id]={r:0,s:0};a[id].r++;localStorage.setItem('bm_stats',JSON.stringify(a));}catch(e){}
+}
+function addShare(id){
+  fetch(BM_API+'/'+id+'/share',{method:'POST'}).catch(function(){});
+  try{var a=JSON.parse(localStorage.getItem('bm_stats')||'{}');if(!a[id])a[id]={r:0,s:0};a[id].s++;localStorage.setItem('bm_stats',JSON.stringify(a));}catch(e){}
+}
 function score(id){var s=getStat(id);return s.r+s.s*3;}
 
 // ── IMAGE HTML ──
@@ -40,6 +46,33 @@ function shareHtml(s){
 }
 
 var cur="all";
+var BM_API="https://stories.bellemontsanctuaryresort.com/api/stories";
+
+// ── FETCH AND RENDER ──
+window.bmLoad=function(){
+  var ce=document.getElementById("storiesContent");
+  var sc=document.getElementById("storiesCount");
+  if(ce) ce.innerHTML='<div style="padding:4rem 3rem;text-align:center;color:#9a9088;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;">Loading stories...</div>';
+  fetch(BM_API)
+    .then(function(r){return r.json();})
+    .then(function(stories){
+      window.BM_STORIES=stories.map(function(s){
+        return {
+          id:s.id, title:s.title, excerpt:s.excerpt,
+          category:s.category, categoryLabel:s.category_label,
+          date:s.date, readTime:s.read_time,
+          image:s.image, url:s.url, featured:s.featured,
+          reads:s.reads, shares:s.shares
+        };
+      });
+      window.bmRender(cur);
+    })
+    .catch(function(){
+      // Fallback to static BM_STORIES if API unreachable
+      console.warn('Stories API unreachable, using static data');
+      window.bmRender(cur);
+    });
+};
 
 // ── RENDER ──
 window.bmRender=function(filter){
@@ -231,6 +264,11 @@ document.addEventListener("DOMContentLoaded",function(){
   document.querySelectorAll(".filter-btn").forEach(function(b){
     b.addEventListener("click",function(){window.bmSetFilter(b.dataset.filter);});
   });
-  window.bmRender("all");
+  // Use API if available, fallback to static BM_STORIES
+  if(window.BM_STORIES && window.BM_STORIES.length > 0){
+    window.bmRender("all");
+  } else {
+    window.bmLoad();
+  }
 });
 })();
