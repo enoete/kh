@@ -88,53 +88,62 @@ window.bmRender=function(filter){
 
 
   ce.innerHTML=fh+gh;
-  bmBind();
 };
 
-// ── BIND EVENTS ──
-window.bmBind=function(){
-  document.querySelectorAll(".story-lnk").forEach(function(el){
-    el.addEventListener("click",function(){addRead(this.dataset.sid);});
-  });
-  document.querySelectorAll(".bm-share-btn").forEach(function(btn){
-    btn.addEventListener("click",function(e){
-      e.preventDefault();e.stopPropagation();
-      var p=document.getElementById("bsp-"+this.dataset.sid);
-      document.querySelectorAll(".bm-share-panel").forEach(function(x){if(x!==p)x.classList.remove("open");});
-      p.classList.toggle("open");
-    });
-  });
-  document.querySelectorAll(".bm-sopt").forEach(function(btn){
-    btn.addEventListener("click",function(e){
-      e.preventDefault();e.stopPropagation();
-      var sid=this.dataset.sid,p=this.dataset.p;
-      var s=(window.BM_STORIES||[]).find(function(x){return x.id===sid;});
-      if(!s)return;
-      var fu=window.location.origin+s.url,eu=encodeURIComponent(fu),et=encodeURIComponent(s.title);
-      addShare(sid);
-      var links={
-        facebook:"https://www.facebook.com/sharer/sharer.php?u="+eu,
-        twitter:"https://twitter.com/intent/tweet?url="+eu+"&text="+et,
-        whatsapp:"https://api.whatsapp.com/send?text="+et+"%20"+eu,
-        email:"mailto:?subject="+et+"&body="+eu
-      };
-      if(p==="copy"){
-        navigator.clipboard.writeText(fu).then(function(){
-          var panel=document.getElementById("bsp-"+sid);
-          panel.innerHTML='<div style="padding:0.8rem 1rem;font-size:13px;color:#27ae60;font-family:Jost,sans-serif;font-weight:300;">&#10003; Link copied!</div>';
-          setTimeout(function(){window.bmRender(cur);},1500);
-        });
-      } else {
-        window.open(links[p],"_blank","width=600,height=400");
-        document.getElementById("bsp-"+sid).classList.remove("open");
-      }
-    });
-  });
-  document.addEventListener("click",function h(){
+// ── SINGLE DELEGATED EVENT HANDLER — works on dynamically rendered content ──
+document.addEventListener("click",function(e){
+
+  // Close all panels when clicking outside
+  if(!e.target.closest(".bm-share-wrap")){
     document.querySelectorAll(".bm-share-panel").forEach(function(p){p.classList.remove("open");});
-    document.removeEventListener("click",h);
-  });
-};
+    return;
+  }
+
+  // Share toggle button
+  var shareBtn=e.target.closest(".bm-share-btn");
+  if(shareBtn){
+    e.preventDefault();e.stopPropagation();
+    var sid=shareBtn.dataset.sid;
+    var panel=document.getElementById("bsp-"+sid);
+    document.querySelectorAll(".bm-share-panel").forEach(function(p){if(p!==panel)p.classList.remove("open");});
+    panel.classList.toggle("open");
+    return;
+  }
+
+  // Share option buttons
+  var opt=e.target.closest(".bm-sopt");
+  if(opt){
+    e.preventDefault();e.stopPropagation();
+    var sid=opt.dataset.sid,plt=opt.dataset.p;
+    var s=(window.BM_STORIES||[]).find(function(x){return x.id===sid;});
+    if(!s)return;
+    var fu=window.location.origin+s.url,eu=encodeURIComponent(fu),et=encodeURIComponent(s.title);
+    addShare(sid);
+    var links={
+      facebook:"https://www.facebook.com/sharer/sharer.php?u="+eu,
+      twitter:"https://twitter.com/intent/tweet?url="+eu+"&text="+et,
+      whatsapp:"https://api.whatsapp.com/send?text="+et+"%20"+eu,
+      email:"mailto:?subject="+et+"&body="+eu
+    };
+    if(plt==="copy"){
+      navigator.clipboard.writeText(fu).then(function(){
+        var panel=document.getElementById("bsp-"+sid);
+        panel.innerHTML='<div style="padding:0.8rem 1rem;font-size:13px;color:#27ae60;font-family:Jost,sans-serif;font-weight:300;">&#10003; Link copied!</div>';
+        setTimeout(function(){window.bmRender(cur);},1500);
+      });
+    } else {
+      window.open(links[plt],"_blank","width=600,height=400");
+      document.getElementById("bsp-"+sid).classList.remove("open");
+    }
+    return;
+  }
+
+  // Read tracking on story links
+  var lnk=e.target.closest(".story-lnk");
+  if(lnk&&lnk.dataset.sid) addRead(lnk.dataset.sid);
+});
+
+window.bmBind=function(){}; // no-op, delegation handles everything
 
 window.bmSetFilter=function(f){
   cur=f;
