@@ -88,6 +88,58 @@ window.bmRender=function(filter){
 
 
   ce.innerHTML=fh+gh;
+
+  // Attach handlers after DOM settles
+  setTimeout(function(){
+    document.querySelectorAll(".bm-share-btn").forEach(function(btn){
+      // Clone to remove any stale listeners
+      var fresh = btn.cloneNode(true);
+      btn.parentNode.replaceChild(fresh, btn);
+      fresh.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var sid = this.dataset.sid;
+        var panel = document.getElementById("bsp-"+sid);
+        if(!panel) return;
+        var isOpen = panel.classList.contains("open");
+        document.querySelectorAll(".bm-share-panel").forEach(function(p){p.classList.remove("open");});
+        if(!isOpen) panel.classList.add("open");
+      });
+    });
+    document.querySelectorAll(".bm-sopt").forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var sid=this.dataset.sid, plt=this.dataset.p;
+        var s=(window.BM_STORIES||[]).find(function(x){return x.id===sid;});
+        if(!s) return;
+        var fu=window.location.origin+s.url,eu=encodeURIComponent(fu),et=encodeURIComponent(s.title);
+        addShare(sid);
+        var links={
+          facebook:"https://www.facebook.com/sharer/sharer.php?u="+eu,
+          twitter:"https://twitter.com/intent/tweet?url="+eu+"&text="+et,
+          whatsapp:"https://api.whatsapp.com/send?text="+et+"%20"+eu,
+          email:"mailto:?subject="+et+"&body="+eu
+        };
+        if(plt==="copy"){
+          navigator.clipboard.writeText(fu).then(function(){
+            var panel=document.getElementById("bsp-"+sid);
+            panel.innerHTML='<div style="padding:0.8rem 1rem;font-size:13px;color:#27ae60;font-family:Jost,sans-serif;">&#10003; Copied!</div>';
+            setTimeout(function(){window.bmRender(cur);},1500);
+          });
+        } else {
+          window.open(links[plt],"_blank","width=600,height=400");
+          document.getElementById("bsp-"+sid).classList.remove("open");
+        }
+      });
+    });
+    // Close on outside click
+    document.addEventListener("click", function h(e){
+      if(!e.target.closest(".bm-share-wrap")){
+        document.querySelectorAll(".bm-share-panel").forEach(function(p){p.classList.remove("open");});
+      }
+    });
+  }, 0);
 };
 
 // ── SINGLE DELEGATED EVENT HANDLER — works on dynamically rendered content ──
