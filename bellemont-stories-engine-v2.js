@@ -21,6 +21,7 @@ function shareHtml(s){
     +'<button class="bm-share-btn" data-sid="'+s.id+'">Share</button>'
     +'<div class="bm-share-panel" id="bsp-'+s.id+'">'
     +'<button class="bm-sopt" data-sid="'+s.id+'" data-p="facebook"><span class="bm-icon" style="background:#1877f2;">f</span>Facebook</button>'
+    +'<button class="bm-sopt" data-sid="'+s.id+'" data-p="instagram"><span class="bm-icon" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);">&#9752;</span>Instagram</button>'
     +'<button class="bm-sopt" data-sid="'+s.id+'" data-p="twitter"><span class="bm-icon" style="background:#000;">𝕏</span>X / Twitter</button>'
     +'<button class="bm-sopt" data-sid="'+s.id+'" data-p="whatsapp"><span class="bm-icon" style="background:#25d366;">W</span>WhatsApp</button>'
     +'<button class="bm-sopt" data-sid="'+s.id+'" data-p="email"><span class="bm-icon" style="background:#8b6f47;">@</span>Email</button>'
@@ -119,8 +120,18 @@ window.bmRender=function(filter){
           facebook:"https://www.facebook.com/sharer/sharer.php?u="+eu,
           twitter:"https://twitter.com/intent/tweet?url="+eu+"&text="+et,
           whatsapp:"https://api.whatsapp.com/send?text="+et+"%20"+eu,
-          email:"mailto:?subject="+et+"&body="+eu
+          email:"mailto:?subject="+et+"&body="+eu,
+          instagram:"https://www.instagram.com/"
         };
+        if(plt==="instagram"){
+          // Instagram doesn't support direct URL sharing — copy link and open IG
+          navigator.clipboard.writeText(fu).then(function(){
+            var panel=document.getElementById("bsp-"+sid);
+            panel.innerHTML='<div style="padding:0.8rem 1rem;font-size:12px;color:#8b6f47;font-family:Jost,sans-serif;line-height:1.5;">&#10003; Link copied!<br><span style="color:#9a9088;">Paste it in your Instagram story or bio.</span></div>';
+            setTimeout(function(){window.open("https://www.instagram.com/","_blank");},800);
+          });
+          return;
+        }
         if(plt==="copy"){
           navigator.clipboard.writeText(fu).then(function(){
             var panel=document.getElementById("bsp-"+sid);
