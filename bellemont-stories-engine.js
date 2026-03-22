@@ -89,27 +89,27 @@ window.bmRender=function(filter){
 
   ce.innerHTML=fh+gh;
 
-  // Attach handlers after DOM settles
   setTimeout(function(){
     document.querySelectorAll(".bm-share-btn").forEach(function(btn){
-      // Clone to remove any stale listeners
       var fresh = btn.cloneNode(true);
       btn.parentNode.replaceChild(fresh, btn);
       fresh.addEventListener("click", function(e){
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         var sid = this.dataset.sid;
         var panel = document.getElementById("bsp-"+sid);
         if(!panel) return;
-        var isOpen = panel.classList.contains("open");
-        document.querySelectorAll(".bm-share-panel").forEach(function(p){p.classList.remove("open");});
-        if(!isOpen) panel.classList.add("open");
+        var isOpen = panel.style.display === 'flex';
+        document.querySelectorAll(".bm-share-panel").forEach(function(p){p.style.display='none';});
+        panel.style.display = isOpen ? 'none' : 'flex';
       });
     });
     document.querySelectorAll(".bm-sopt").forEach(function(btn){
       btn.addEventListener("click", function(e){
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         var sid=this.dataset.sid, plt=this.dataset.p;
         var s=(window.BM_STORIES||[]).find(function(x){return x.id===sid;});
         if(!s) return;
@@ -129,16 +129,18 @@ window.bmRender=function(filter){
           });
         } else {
           window.open(links[plt],"_blank","width=600,height=400");
-          document.getElementById("bsp-"+sid).classList.remove("open");
+          document.getElementById("bsp-"+sid).style.display='none';
         }
       });
     });
-    // Close on outside click
-    document.addEventListener("click", function h(e){
-      if(!e.target.closest(".bm-share-wrap")){
-        document.querySelectorAll(".bm-share-panel").forEach(function(p){p.classList.remove("open");});
-      }
-    });
+    // Close on outside click — use timeout to avoid catching the opening click
+    setTimeout(function(){
+      document.addEventListener("click", function(e){
+        if(!e.target.closest(".bm-share-wrap")){
+          document.querySelectorAll(".bm-share-panel").forEach(function(p){p.style.display='none';});
+        }
+      });
+    }, 100);
   }, 0);
 };
 
