@@ -46,7 +46,8 @@ window.bmRender=function(filter){
     return;
   }
   var f=fl[0],rest=fl.slice(1),fs=getStat(f.id);
-  var fh='<a class="featured-story story-lnk" href="'+f.url+'" data-sid="'+f.id+'">'
+  var fh='<div class="featured-story-wrap">'
+    +'<a class="featured-story story-lnk" href="'+f.url+'" data-sid="'+f.id+'">'
     +'<div class="featured-image">'+imgHtml(f,500,0)+'</div>'
     +'<div class="featured-body">'
     +'<span class="story-tag">'+f.categoryLabel+'</span>'
@@ -57,12 +58,14 @@ window.bmRender=function(filter){
     +(fs.r>0?'<span>&#128065; '+fs.r+'</span>':'')
     +'<span class="read-more">Read Story</span>'
     +'</div>'
-    +shareHtml(f)
-    +'</div></a>';
+    +'</div></a>'
+    +'<div class="featured-share-bar">'+shareHtml(f)+'</div>'
+    +'</div>';
 
   var gh=rest.length?'<div class="stories-grid">'+rest.map(function(s,i){
     var st=getStat(s.id);
-    return '<a class="story-card story-lnk" href="'+s.url+'" data-sid="'+s.id+'" data-category="'+s.category+'">'
+    return '<div class="story-card-wrap" data-category="'+s.category+'">'
+      +'<a class="story-card story-lnk" href="'+s.url+'" data-sid="'+s.id+'">'
       +'<div class="story-card-image">'+imgHtml(s,260,i+1)
       +'<div class="story-card-overlay">'
       +'<span class="overlay-tag">'+s.categoryLabel+'</span>'
@@ -76,11 +79,13 @@ window.bmRender=function(filter){
       +'<p class="story-card-excerpt">'+s.excerpt.substring(0,100)+'...</p>'
       +'<div class="story-card-footer">'
       +'<span>'+s.date+'</span><span>'+s.readTime+'</span>'
-      +(st.r>0?'<span>👁 '+st.r+'</span>':'')
+      +(st.r>0?'<span>&#128065; '+st.r+'</span>':'')
       +'</div>'
-      +shareHtml(s)
-      +'</div></a>';
+      +'</div></a>'
+      +'<div style="padding:0 1.8rem 1.8rem;">'+shareHtml(s)+'</div>'
+      +'</div>';
   }).join("")+'</div>':"";
+
 
   ce.innerHTML=fh+gh;
   bmBind();
