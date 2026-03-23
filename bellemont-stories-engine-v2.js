@@ -17,7 +17,7 @@ function score(id){var s=getStat(id);return s.r+s.s*3;}
 function imgHtml(story,h,idx){
   var c=PC[idx%PC.length];
   return story.image
-    ?'<img src="'+story.image+'" alt="'+story.title+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
+    ?'<img src="'+story.image+'" alt="'+story.title+'" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;">'
     :'<div style="background:linear-gradient(135deg,'+c[0]+','+c[1]+');min-height:'+h+'px;width:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.25);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;">Image</div>';
 }
 
@@ -68,7 +68,6 @@ window.bmLoad=function(){
       window.bmRender(cur);
     })
     .catch(function(){
-      // Fallback to static BM_STORIES if API unreachable
       console.warn('Stories API unreachable, using static data');
       window.bmRender(cur);
     });
@@ -90,7 +89,7 @@ window.bmRender=function(filter){
   var f=fl[0],rest=fl.slice(1),fs=getStat(f.id);
   var fh='<div class="featured-story-wrap">'
     +'<a class="featured-story story-lnk" href="'+f.url+'" data-sid="'+f.id+'">'
-    +'<div class="featured-image">'+imgHtml(f,500,0)+'</div>'
+    +'<div class="featured-image" style="position:relative;min-height:500px;overflow:hidden;">'+imgHtml(f,500,0)+'</div>'
     +'<div class="featured-body">'
     +'<span class="story-tag">'+f.categoryLabel+'</span>'
     +'<h2 class="featured-title">'+f.title+'</h2>'
@@ -128,7 +127,6 @@ window.bmRender=function(filter){
       +'</div>';
   }).join("")+'</div>':"";
 
-
   ce.innerHTML=fh+gh;
 
   setTimeout(function(){
@@ -165,7 +163,6 @@ window.bmRender=function(filter){
           instagram:"https://www.instagram.com/"
         };
         if(plt==="instagram"){
-          // Instagram doesn't support direct URL sharing — copy link and open IG
           navigator.clipboard.writeText(fu).then(function(){
             var panel=document.getElementById("bsp-"+sid);
             panel.innerHTML='<div style="padding:0.8rem 1rem;font-size:12px;color:#8b6f47;font-family:Jost,sans-serif;line-height:1.5;">&#10003; Link copied!<br><span style="color:#9a9088;">Paste it in your Instagram story or bio.</span></div>';
@@ -185,7 +182,6 @@ window.bmRender=function(filter){
         }
       });
     });
-    // Close on outside click — use timeout to avoid catching the opening click
     setTimeout(function(){
       document.addEventListener("click", function(e){
         if(!e.target.closest(".bm-share-wrap")){
@@ -196,16 +192,12 @@ window.bmRender=function(filter){
   }, 0);
 };
 
-// ── SINGLE DELEGATED EVENT HANDLER — works on dynamically rendered content ──
+// ── SINGLE DELEGATED EVENT HANDLER ──
 document.addEventListener("click",function(e){
-
-  // Close all panels when clicking outside
   if(!e.target.closest(".bm-share-wrap")){
     document.querySelectorAll(".bm-share-panel").forEach(function(p){p.classList.remove("open");});
     return;
   }
-
-  // Share toggle button
   var shareBtn=e.target.closest(".bm-share-btn");
   if(shareBtn){
     e.preventDefault();e.stopPropagation();
@@ -215,8 +207,6 @@ document.addEventListener("click",function(e){
     panel.classList.toggle("open");
     return;
   }
-
-  // Share option buttons
   var opt=e.target.closest(".bm-sopt");
   if(opt){
     e.preventDefault();e.stopPropagation();
@@ -243,13 +233,11 @@ document.addEventListener("click",function(e){
     }
     return;
   }
-
-  // Read tracking on story links
   var lnk=e.target.closest(".story-lnk");
   if(lnk&&lnk.dataset.sid) addRead(lnk.dataset.sid);
 });
 
-window.bmBind=function(){}; // no-op, delegation handles everything
+window.bmBind=function(){};
 
 window.bmSetFilter=function(f){
   cur=f;
@@ -264,7 +252,6 @@ document.addEventListener("DOMContentLoaded",function(){
   document.querySelectorAll(".filter-btn").forEach(function(b){
     b.addEventListener("click",function(){window.bmSetFilter(b.dataset.filter);});
   });
-  // Use API if available, fallback to static BM_STORIES
   if(window.BM_STORIES && window.BM_STORIES.length > 0){
     window.bmRender("all");
   } else {
